@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "920535675660",
+    "firebase_url": "https://datn-chinh-default-rtdb.firebaseio.com",
+    "project_id": "datn-chinh",
+    "storage_bucket": "datn-chinh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920535675660:android:8ffecbd4db2e5cf5340f29",
+        "android_client_info": {
+          "package_name": "com.example.app_tdmt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApE5SkRt8Mk_B6I1vqIVwt53PutmLYK88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920535675660:android:73bcd1c2c0d7a749340f29",
+        "android_client_info": {
+          "package_name": "com.example.datn_trung"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApE5SkRt8Mk_B6I1vqIVwt53PutmLYK88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:920535675660:android:3e31d0e9cc78fd8d340f29",
+        "android_client_info": {
+          "package_name": "tech.mastersam.smarty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApE5SkRt8Mk_B6I1vqIVwt53PutmLYK88"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
