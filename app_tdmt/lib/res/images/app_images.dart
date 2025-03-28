@@ -12,4 +12,8 @@ class AppImages {
   static const level02 = "${imagePath}lungs1very_poor.png";
   static const level03 = "${imagePath}Lungs_Severe.png";
   static const home = "${imagePath}home.png";
+  static const aqiimg = "${imagePath}aqi.png";
+  static const logo1 = "${imagePath}logo1.png";
+  static const logo2 = "${imagePath}logo2KDI.png";
+  static const logo3 = "${imagePath}logo3TV.png";
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app_tdmt/screens/home/pms_screen.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 import '../../res/images/app_images.dart';
 import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
@@ -158,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(
                             height: MediaQuery.of(context).size.height * 0.11,
                             child: Image.asset(
-                              AppImages.fab,
+                              AppImages.logo1,
                               fit: BoxFit.contain,
                             ),
                           ),
@@ -221,202 +222,315 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  const SizedBox(height: 20),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Đồ thị AQI
-                      Expanded(
-                        flex: 2, // Chiếm 2 phần không gian
-                        child: SizedBox(
-                          height: 400, // Chiều cao cố định
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CustomPaint(
-                                size: const Size(360, 180),
-                                painter: AQIGaugePainter(),
+                      SizedBox(
+                        width: 450,
+                        height: 450,
+                        child: SfRadialGauge(
+                          axes: <RadialAxis>[
+                            RadialAxis(
+                              minimum: 0,
+                              maximum: 500,
+                              showLabels: false,
+                              showTicks: false,
+                              axisLineStyle: const AxisLineStyle(
+                                thickness: 60,
+                                cornerStyle: CornerStyle.bothCurve,
+                                color: Colors.white,
                               ),
-                              Positioned(
-                                top: 178,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      aqiValue.toStringAsFixed(0),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 40,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Transform.rotate(
-                                        angle: arrowRotationAngle,
-                                        child: Positioned(
-                                          // bottom: 1000000,
-                                          child: Image.asset(
-                                            AppImages.muiten,
-                                            width: 100,
-                                            height: 100,
-                                          ),
-                                        )),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      'Chất lượng - $aqiDescription',
-                                      style: TextStyle(
-                                        color: aqiColor,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Chất ô nhiễm chính : $pollutant',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+                              ranges: <GaugeRange>[
+                                GaugeRange(
+                                    startValue: 0,
+                                    endValue: 50,
+                                    color: Colors.green,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                                GaugeRange(
+                                    startValue: 50,
+                                    endValue: 100,
+                                    color: Colors.yellow,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                                GaugeRange(
+                                    startValue: 100,
+                                    endValue: 150,
+                                    color: Colors.orange,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                                GaugeRange(
+                                    startValue: 150,
+                                    endValue: 200,
+                                    color: Colors.red,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                                GaugeRange(
+                                    startValue: 200,
+                                    endValue: 300,
+                                    color: Colors.purple,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                                GaugeRange(
+                                    startValue: 300,
+                                    endValue: 500,
+                                    color: Colors.brown,
+                                    startWidth: 50,
+                                    endWidth: 50),
+                              ],
+                              pointers: <GaugePointer>[
+                                NeedlePointer(
+                                  value: aqiValue, // Giá trị hiển thị
+                                  enableAnimation: true, // Hiệu ứng chuyển động
+                                  needleLength:
+                                      0.6, // Độ dài kim (từ 0.0 đến 1.0)
+                                  needleStartWidth: 0.5, // Đầu kim rất mỏng
+                                  needleEndWidth:
+                                      12, // Đuôi kim rộng hơn để tạo hình mũi tên
+                                  needleColor: Colors.red, // Màu kim
+                                  knobStyle: const KnobStyle(
+                                    color: Colors.red, // Màu trung tâm kim
+                                    borderColor:
+                                        Colors.white, // Viền ngoài của tâm kim
+                                    borderWidth: 2, // Độ dày viền tâm kim
+                                    sizeUnit: GaugeSizeUnit.factor,
+                                    knobRadius:
+                                        0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                              annotations: <GaugeAnnotation>[
+                                GaugeAnnotation(
+                                  widget: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '$aqiValue', // Giá trị đo AQI
+                                        style: const TextStyle(
+                                          fontSize: 30,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const Text(
+                                        'AQI', // Thêm chữ AQI bên dưới
+                                        style: TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  angle: 90,
+                                  positionFactor: 0.5,
+                                ),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 100),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: Image.asset(
+                          AppImages.fab,
+                          fit: BoxFit.contain,
                         ),
                       ),
 
+                      // Đồ thị AQI
+                      // Expanded(
+                      //   flex: 2, // Chiếm 2 phần không gian
+                      //   child: SizedBox(
+                      //     height: 400, // Chiều cao cố định
+                      //     child: Stack(
+                      //       alignment: Alignment.center,
+                      //       children: [
+                      //         CustomPaint(
+                      //           size: const Size(360, 180),
+                      //           painter: AQIGaugePainter(),
+                      //         ),
+                      //         Positioned(
+                      //           top: 178,
+                      //           child: Column(
+                      //             mainAxisAlignment: MainAxisAlignment.center,
+                      //             crossAxisAlignment: CrossAxisAlignment.center,
+                      //             children: [
+                      //               Text(
+                      //                 aqiValue.toStringAsFixed(0),
+                      //                 style: const TextStyle(
+                      //                   color: Colors.white,
+                      //                   fontSize: 40,
+                      //                   fontWeight: FontWeight.bold,
+                      //                 ),
+                      //               ),
+                      //               Transform.rotate(
+                      //                   angle: arrowRotationAngle,
+                      //                   child: Positioned(
+                      //                     // bottom: 1000000,
+                      //                     child: Image.asset(
+                      //                       AppImages.muiten,
+                      //                       width: 100,
+                      //                       height: 100,
+                      //                     ),
+                      //                   )),
+                      //               const SizedBox(height: 5),
+                      //               Text(
+                      //                 'Chất lượng - $aqiDescription',
+                      //                 style: TextStyle(
+                      //                   color: aqiColor,
+                      //                   fontSize: 18,
+                      //                   fontWeight: FontWeight.bold,
+                      //                 ),
+                      //               ),
+                      //               Text(
+                      //                 'Chất ô nhiễm chính : $pollutant',
+                      //                 style: const TextStyle(
+                      //                   color: Colors.white,
+                      //                   fontSize: 14,
+                      //                 ),
+                      //               ),
+                      //             ],
+                      //           ),
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
+
                       // Bảng thông số
-                      Expanded(
-                        flex: 3, // Chiếm 3 phần không gian
-                        child: Container(
-                          padding: const EdgeInsets.only(top: 100),
-                          height: 400, // Chiều cao cố định
-                          child: Table(
-                            border:
-                                TableBorder.all(color: Colors.green, width: 3),
-                            columnWidths: const {
-                              0: FixedColumnWidth(
-                                  150), // Điều chỉnh độ rộng cột
-                              1: FixedColumnWidth(
-                                  150), // Điều chỉnh độ rộng cột
-                            },
-                            children: [
-                              TableRow(
-                                children: [
-                                  const TableCell(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: Text(
-                                        'Nhiệt độ',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(20.0),
-                                      child: Text(
-                                        '${tempValue.toStringAsFixed(1)}°C',
-                                        style: const TextStyle(
-                                          fontSize: 24,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              TableRow(
-                                children: [
-                                  const TableCell(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: Text(
-                                        'Độ ẩm',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(20.0),
-                                      child: Text(
-                                        '${humiValue.toStringAsFixed(1)}%',
-                                        style: const TextStyle(
-                                          fontSize: 24,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              TableRow(
-                                children: [
-                                  const TableCell(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(20.0),
-                                      child: Text(
-                                        'CO',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ),
-                                  TableCell(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(20.0),
-                                      child: Column(
-                                        children: [
-                                          Text(
-                                            '${max(coValue - 219, 0).toStringAsFixed(1)} ppm',
-                                            style: const TextStyle(
-                                              fontSize: 24,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          Text(
-                                            coLevelDescription,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: coLevelColor,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // Expanded(
+                      //   flex: 3, // Chiếm 3 phần không gian
+                      //   child: Container(
+                      //     padding: const EdgeInsets.only(top: 100),
+                      //     height: 400, // Chiều cao cố định
+                      //     child: Table(
+                      //       border:
+                      //           TableBorder.all(color: Colors.green, width: 3),
+                      //       columnWidths: const {
+                      //         0: FixedColumnWidth(
+                      //             150), // Điều chỉnh độ rộng cột
+                      //         1: FixedColumnWidth(
+                      //             150), // Điều chỉnh độ rộng cột
+                      //       },
+                      //       children: [
+                      //         TableRow(
+                      //           children: [
+                      //             const TableCell(
+                      //               child: Padding(
+                      //                 padding: EdgeInsets.all(20.0),
+                      //                 child: Text(
+                      //                   'Nhiệt độ',
+                      //                   style: TextStyle(
+                      //                     fontSize: 24,
+                      //                     color: Colors.white,
+                      //                     fontWeight: FontWeight.bold,
+                      //                   ),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //             TableCell(
+                      //               child: Padding(
+                      //                 padding: const EdgeInsets.all(20.0),
+                      //                 child: Text(
+                      //                   '${tempValue.toStringAsFixed(1)}°C',
+                      //                   style: const TextStyle(
+                      //                     fontSize: 24,
+                      //                     color: Colors.white,
+                      //                     fontWeight: FontWeight.bold,
+                      //                   ),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //         TableRow(
+                      //           children: [
+                      //             const TableCell(
+                      //               child: Padding(
+                      //                 padding: EdgeInsets.all(20.0),
+                      //                 child: Text(
+                      //                   'Độ ẩm',
+                      //                   style: TextStyle(
+                      //                     fontSize: 24,
+                      //                     color: Colors.white,
+                      //                     fontWeight: FontWeight.bold,
+                      //                   ),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //             TableCell(
+                      //               child: Padding(
+                      //                 padding: const EdgeInsets.all(20.0),
+                      //                 child: Text(
+                      //                   '${humiValue.toStringAsFixed(1)}%',
+                      //                   style: const TextStyle(
+                      //                     fontSize: 24,
+                      //                     color: Colors.white,
+                      //                     fontWeight: FontWeight.bold,
+                      //                   ),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //         TableRow(
+                      //           children: [
+                      //             const TableCell(
+                      //               child: Padding(
+                      //                 padding: EdgeInsets.all(20.0),
+                      //                 child: Text(
+                      //                   'CO',
+                      //                   style: TextStyle(
+                      //                     fontSize: 24,
+                      //                     color: Colors.white,
+                      //                     fontWeight: FontWeight.bold,
+                      //                   ),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //             TableCell(
+                      //               child: Padding(
+                      //                 padding: const EdgeInsets.all(20.0),
+                      //                 child: Column(
+                      //                   children: [
+                      //                     Text(
+                      //                       '${max(coValue - 219, 0).toStringAsFixed(1)} ppm',
+                      //                       style: const TextStyle(
+                      //                         fontSize: 24,
+                      //                         color: Colors.white,
+                      //                         fontWeight: FontWeight.bold,
+                      //                       ),
+                      //                       textAlign: TextAlign.center,
+                      //                     ),
+                      //                     Text(
+                      //                       coLevelDescription,
+                      //                       style: TextStyle(
+                      //                         fontSize: 14,
+                      //                         color: coLevelColor,
+                      //                         fontWeight: FontWeight.bold,
+                      //                       ),
+                      //                       textAlign: TextAlign.center,
+                      //                     ),
+                      //                   ],
+                      //                 ),
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 5),
                   Table(
                     columnWidths: const {
                       0: FlexColumnWidth(),

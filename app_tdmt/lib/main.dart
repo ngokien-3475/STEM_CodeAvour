@@ -12,14 +12,6 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
-  // // Đặt chế độ hiển thị của status bar
-  // SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-  //   statusBarColor: Colors.transparent, // Làm trong suốt thanh trạng thái
-  //   // statusBarBrightness: Brightness.light, // Định dạng icon trên status bar
-  //   // statusBarIconBrightness: Brightness.dark, // Màu icon (trắng hoặc đen)
-  // ));
-
   runApp(const MyApp());
 }
 

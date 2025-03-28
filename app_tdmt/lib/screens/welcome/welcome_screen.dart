@@ -18,19 +18,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   final List<Map<String, String>> _texts = [
     {
-      "title": "Breath Better",
+      "title": "Tận hưởng không khí trong lành",
       "subtitle":
-          "Understand the air around you, wherever you go with the largest coverage of trusted data."
+          "Nắm bắt chất lượng không khí xung quanh bạn mọi lúc, mọi nơi với nguồn dữ liệu đáng tin cậy nhất."
     },
     {
-      "title": "Track Pollution",
+      "title": "Theo dõi mức độ ô nhiễm",
       "subtitle":
-          "Discover your personal exposure during your daily routine and take action to reduce it."
+          "Biết được bạn đang tiếp xúc với ô nhiễm như thế nào trong sinh hoạt hằng ngày và tìm cách giảm thiểu rủi ro"
     },
     {
-      "title": "Controll Exposure",
+      "title": "Giảm thiểu tác động từ ô nhiễm",
       "subtitle":
-          "During your daily routine, discover your personal exposure and take action."
+          "Chủ động bảo vệ sức khỏe bằng cách theo dõi và giảm thiểu mức độ tiếp xúc với không khí ô nhiễm."
     },
   ];
 
@@ -38,6 +38,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void initState() {
     super.initState();
     _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
   }
 
   void _startAutoScroll() {
@@ -54,13 +61,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       );
       setState(() {});
     });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _pageController.dispose();
-    super.dispose();
   }
 
   @override
