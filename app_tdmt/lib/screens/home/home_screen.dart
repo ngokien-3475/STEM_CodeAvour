@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:app_tdmt/screens/home/pms_screen.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import '../../res/images/app_images.dart';
-import 'dart:math';
+// import 'dart:math';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 
@@ -14,73 +14,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double tempValue = 0;
-  double humiValue = 0;
-  double coValue = 0;
   double aqiValue = 0;
   String aqiDescription = '';
   String pollutant = 'AQI';
   Color aqiColor = Colors.green;
 
-  // Add a variable to hold the rotation angle of the arrow
-  double arrowRotationAngle = 0;
-
-  // Add a variable to hold the CO level description
-  String coLevelDescription = '';
-  Color coLevelColor = Colors.green;
-
   final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref();
 
   Future<void> _getDataFromFirebase() async {
     try {
-      DataSnapshot tempSnapshot =
-          await _databaseReference.child('monitor/moniTemp').get();
-      DataSnapshot humiSnapshot =
-          await _databaseReference.child('monitor/moniHumi').get();
-      DataSnapshot coSnapshot =
-          await _databaseReference.child('monitor/moniCo').get();
       DataSnapshot aqiSnapshot =
           await _databaseReference.child('monitor/moniAQI').get();
 
-      print("Temp Snapshot: ${tempSnapshot.value}");
-      print("Humi Snapshot: ${humiSnapshot.value}");
-      print("CO Snapshot: ${coSnapshot.value}");
       print("AQI Snapshot: ${aqiSnapshot.value}");
 
       setState(() {
-        tempValue = (tempSnapshot.value != null)
-            ? double.tryParse(tempSnapshot.value.toString()) ?? 0
-            : 0;
-        humiValue = (humiSnapshot.value != null)
-            ? double.tryParse(humiSnapshot.value.toString()) ?? 0
-            : 0;
-        coValue = (coSnapshot.value != null)
-            ? double.tryParse(coSnapshot.value.toString()) ?? 0
-            : 0;
         aqiValue = (aqiSnapshot.value != null)
             ? double.tryParse(aqiSnapshot.value.toString()) ?? 0
             : 0;
         _updateAQIInfo(aqiValue.toInt());
-        _updateCOInfo(coValue); // Update CO level description and color
-
-        // Update arrow rotation after getting aqiValue
-        arrowRotationAngle = _calculateArrowRotationAngle(aqiValue.toInt());
       });
     } catch (error) {
       print("Error fetching data: $error");
     }
-  }
-
-  // Function to calculate the rotation angle based on AQI value
-  double _calculateArrowRotationAngle(int aqi) {
-    // Normalize AQI to a 0-1 range, clamping to the range [0, 500]
-    double normalizedAqi = (aqi.clamp(0, 400) / 400.0);
-    // Map the normalized AQI to an angle range of 0 to pi.
-    // This assumes that the semicircle gauge starts at 0 and ends at pi.
-    double angle = pi * normalizedAqi;
-
-    // return angle - 1 * pi / 6;
-    return angle - pi / 2;
   }
 
   void _updateAQIInfo(int aqi) {
@@ -88,44 +44,20 @@ class _HomeScreenState extends State<HomeScreen> {
       aqiDescription = 'Tốt';
       aqiColor = Colors.green;
     } else if (aqi >= 51 && aqi <= 100) {
-      aqiDescription = 'Trung bình';
-      aqiColor = Colors.lightGreen;
-    } else if (aqi >= 101 && aqi <= 219) {
       aqiDescription = 'Vừa phải';
       aqiColor = Colors.yellow;
-    } else if (aqi >= 201 && aqi <= 300) {
+    } else if (aqi >= 101 && aqi <= 150) {
       aqiDescription = 'Kém';
       aqiColor = Colors.orange;
-    } else if (aqi >= 301 && aqi <= 400) {
+    } else if (aqi >= 151 && aqi <= 200) {
       aqiDescription = 'Rất Kém';
       aqiColor = Colors.redAccent;
-    } else if (aqi >= 401 && aqi <= 500) {
+    } else if (aqi >= 201 && aqi <= 300) {
       aqiDescription = 'Nguy hại';
       aqiColor = Colors.brown;
     } else {
       aqiDescription = 'Không xác định';
       aqiColor = Colors.grey;
-    }
-  }
-
-  void _updateCOInfo(double coValue) {
-    if (max(coValue - 219, 0) >= 0 && max(coValue - 219, 0) <= 9) {
-      coLevelDescription = 'Mức bình thường, không gây hại';
-      coLevelColor = Colors.green;
-    } else if (max(coValue - 219, 0) >= 10 && max(coValue - 219, 0) <= 35) {
-      coLevelDescription =
-          'Có thể gây ra các triệu chứng nhẹ như đau đầu, mệt mỏi nếu tiếp xúc lâu dài';
-      coLevelColor = Colors.yellow;
-    } else if (max(coValue - 219, 0) >= 36 && max(coValue - 219, 0) <= 100) {
-      coLevelDescription = 'Đau đầu dữ dội, chóng mặt, buồn nôn sau vài giờ';
-      coLevelColor = Colors.orange;
-    } else if (max(coValue - 219, 0) > 100) {
-      coLevelDescription =
-          'Nguy hiểm đến tính mạng, có thể gây mất ý thức và tử vong';
-      coLevelColor = Colors.red;
-    } else {
-      coLevelDescription = 'Không xác định';
-      coLevelColor = Colors.grey;
     }
   }
 
@@ -153,57 +85,108 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.11,
-                            child: Image.asset(
-                              AppImages.logo1,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          StreamBuilder(
-                            stream: Stream.periodic(const Duration(seconds: 1),
-                                (count) {
-                              return DateTime.now();
-                            }),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                final now = snapshot.data as DateTime;
-                                final formattedDate =
-                                    "${now.day} ${_getMonthName(now.month)} ${now.year}";
-                                final formattedTime =
-                                    "${now.hour}:${now.minute}:${now.second}";
-                                return Container(
-                                  padding: const EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.7),
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  child: Text(
-                                    '$formattedDate\n$formattedTime',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 14),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              } else {
-                                return const CircularProgressIndicator();
-                              }
-                            },
-                          ),
-                        ],
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.11,
+                        child: Image.asset(
+                          AppImages.logo1,
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                      const Text(
+                      Text(
                         "Giám sát môi trường",
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
+                          fontSize: 32,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5, // Giãn chữ giúp dễ đọc hơn
+                          shadows: [
+                            Shadow(
+                              blurRadius: 4.0,
+                              color: Colors.black.withOpacity(0.4),
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
+                          foreground: Paint()
+                            ..shader = const LinearGradient(
+                              colors: [
+                                Color(0xFF00FFCC), // Xanh ngọc
+                                Color(0xFF0099FF), // Xanh biển
+                              ],
+                            ).createShader(
+                                const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
                         ),
                         textAlign: TextAlign.center,
+                      ),
+                      StreamBuilder(
+                        stream: Stream.periodic(const Duration(seconds: 1),
+                            (count) {
+                          return DateTime.now();
+                        }),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            final now = snapshot.data as DateTime;
+                            final formattedDate =
+                                " ${now.day} ${_getMonthName(now.month)} ${now.year}";
+                            final formattedTime =
+                                "${now.hour.toString().padLeft(2, '0')}:"
+                                "${now.minute.toString().padLeft(2, '0')}:"
+                                "${now.second.toString().padLeft(2, '0')}";
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.black
+                                    .withOpacity(0.5), // Màu nền nhẹ nhàng
+                                borderRadius: BorderRadius.circular(
+                                    12.0), // Bo góc đẹp hơn
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 3,
+                                    offset: const Offset(2, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    formattedDate,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Text(
+                                    formattedTime,
+                                    style: TextStyle(
+                                      color: Colors
+                                          .orangeAccent.shade200, // Màu cam nhẹ
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing:
+                                          1.2, // Khoảng cách giữa các chữ
+                                      shadows: [
+                                        Shadow(
+                                          blurRadius: 5.0,
+                                          color: Colors.black.withOpacity(0.6),
+                                          offset: const Offset(2, 2),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            return const CircularProgressIndicator();
+                          }
+                        },
                       ),
                       IconButton(
                         icon: Image.asset(
@@ -307,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Text(
                                         '$aqiValue', // Giá trị đo AQI
                                         style: const TextStyle(
-                                          fontSize: 30,
+                                          fontSize: 32,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -315,9 +298,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                       const Text(
                                         'AQI', // Thêm chữ AQI bên dưới
                                         style: TextStyle(
-                                          fontSize: 32,
+                                          fontSize: 28,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        '$aqiDescription',
+                                        style: TextStyle(
+                                          color: aqiColor,
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
@@ -338,196 +329,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.contain,
                         ),
                       ),
-
-                      // Đồ thị AQI
-                      // Expanded(
-                      //   flex: 2, // Chiếm 2 phần không gian
-                      //   child: SizedBox(
-                      //     height: 400, // Chiều cao cố định
-                      //     child: Stack(
-                      //       alignment: Alignment.center,
-                      //       children: [
-                      //         CustomPaint(
-                      //           size: const Size(360, 180),
-                      //           painter: AQIGaugePainter(),
-                      //         ),
-                      //         Positioned(
-                      //           top: 178,
-                      //           child: Column(
-                      //             mainAxisAlignment: MainAxisAlignment.center,
-                      //             crossAxisAlignment: CrossAxisAlignment.center,
-                      //             children: [
-                      //               Text(
-                      //                 aqiValue.toStringAsFixed(0),
-                      //                 style: const TextStyle(
-                      //                   color: Colors.white,
-                      //                   fontSize: 40,
-                      //                   fontWeight: FontWeight.bold,
-                      //                 ),
-                      //               ),
-                      //               Transform.rotate(
-                      //                   angle: arrowRotationAngle,
-                      //                   child: Positioned(
-                      //                     // bottom: 1000000,
-                      //                     child: Image.asset(
-                      //                       AppImages.muiten,
-                      //                       width: 100,
-                      //                       height: 100,
-                      //                     ),
-                      //                   )),
-                      //               const SizedBox(height: 5),
-                      //               Text(
-                      //                 'Chất lượng - $aqiDescription',
-                      //                 style: TextStyle(
-                      //                   color: aqiColor,
-                      //                   fontSize: 18,
-                      //                   fontWeight: FontWeight.bold,
-                      //                 ),
-                      //               ),
-                      //               Text(
-                      //                 'Chất ô nhiễm chính : $pollutant',
-                      //                 style: const TextStyle(
-                      //                   color: Colors.white,
-                      //                   fontSize: 14,
-                      //                 ),
-                      //               ),
-                      //             ],
-                      //           ),
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ),
-
-                      // Bảng thông số
-                      // Expanded(
-                      //   flex: 3, // Chiếm 3 phần không gian
-                      //   child: Container(
-                      //     padding: const EdgeInsets.only(top: 100),
-                      //     height: 400, // Chiều cao cố định
-                      //     child: Table(
-                      //       border:
-                      //           TableBorder.all(color: Colors.green, width: 3),
-                      //       columnWidths: const {
-                      //         0: FixedColumnWidth(
-                      //             150), // Điều chỉnh độ rộng cột
-                      //         1: FixedColumnWidth(
-                      //             150), // Điều chỉnh độ rộng cột
-                      //       },
-                      //       children: [
-                      //         TableRow(
-                      //           children: [
-                      //             const TableCell(
-                      //               child: Padding(
-                      //                 padding: EdgeInsets.all(20.0),
-                      //                 child: Text(
-                      //                   'Nhiệt độ',
-                      //                   style: TextStyle(
-                      //                     fontSize: 24,
-                      //                     color: Colors.white,
-                      //                     fontWeight: FontWeight.bold,
-                      //                   ),
-                      //                   textAlign: TextAlign.center,
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //             TableCell(
-                      //               child: Padding(
-                      //                 padding: const EdgeInsets.all(20.0),
-                      //                 child: Text(
-                      //                   '${tempValue.toStringAsFixed(1)}°C',
-                      //                   style: const TextStyle(
-                      //                     fontSize: 24,
-                      //                     color: Colors.white,
-                      //                     fontWeight: FontWeight.bold,
-                      //                   ),
-                      //                   textAlign: TextAlign.center,
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //         TableRow(
-                      //           children: [
-                      //             const TableCell(
-                      //               child: Padding(
-                      //                 padding: EdgeInsets.all(20.0),
-                      //                 child: Text(
-                      //                   'Độ ẩm',
-                      //                   style: TextStyle(
-                      //                     fontSize: 24,
-                      //                     color: Colors.white,
-                      //                     fontWeight: FontWeight.bold,
-                      //                   ),
-                      //                   textAlign: TextAlign.center,
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //             TableCell(
-                      //               child: Padding(
-                      //                 padding: const EdgeInsets.all(20.0),
-                      //                 child: Text(
-                      //                   '${humiValue.toStringAsFixed(1)}%',
-                      //                   style: const TextStyle(
-                      //                     fontSize: 24,
-                      //                     color: Colors.white,
-                      //                     fontWeight: FontWeight.bold,
-                      //                   ),
-                      //                   textAlign: TextAlign.center,
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //         TableRow(
-                      //           children: [
-                      //             const TableCell(
-                      //               child: Padding(
-                      //                 padding: EdgeInsets.all(20.0),
-                      //                 child: Text(
-                      //                   'CO',
-                      //                   style: TextStyle(
-                      //                     fontSize: 24,
-                      //                     color: Colors.white,
-                      //                     fontWeight: FontWeight.bold,
-                      //                   ),
-                      //                   textAlign: TextAlign.center,
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //             TableCell(
-                      //               child: Padding(
-                      //                 padding: const EdgeInsets.all(20.0),
-                      //                 child: Column(
-                      //                   children: [
-                      //                     Text(
-                      //                       '${max(coValue - 219, 0).toStringAsFixed(1)} ppm',
-                      //                       style: const TextStyle(
-                      //                         fontSize: 24,
-                      //                         color: Colors.white,
-                      //                         fontWeight: FontWeight.bold,
-                      //                       ),
-                      //                       textAlign: TextAlign.center,
-                      //                     ),
-                      //                     Text(
-                      //                       coLevelDescription,
-                      //                       style: TextStyle(
-                      //                         fontSize: 14,
-                      //                         color: coLevelColor,
-                      //                         fontWeight: FontWeight.bold,
-                      //                       ),
-                      //                       textAlign: TextAlign.center,
-                      //                     ),
-                      //                   ],
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //           ],
-                      //         ),
-                      //       ],
-                      //     ),
-                      //   ),
-                      // ),
                     ],
                   ),
                   const SizedBox(height: 5),
@@ -614,47 +415,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-class AQIGaugePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final width = size.width;
-    final height = size.height * 2;
-    final center = Offset(width / 2, size.height);
-
-    final colors = [
-      Colors.green,
-      Colors.yellow,
-      Colors.orange,
-      Colors.red,
-      Colors.purple,
-      Colors.purple,
-      Colors.brown,
-      Colors.brown,
-    ];
-
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 50
-      ..strokeCap = StrokeCap.butt;
-
-    double startAngle = -pi;
-    double sweepAngle = pi / colors.length;
-
-    for (var color in colors) {
-      paint.color = color;
-      canvas.drawArc(
-        Rect.fromCenter(center: center, width: width, height: height),
-        startAngle,
-        sweepAngle + pi / 180,
-        false,
-        paint,
-      );
-      startAngle += sweepAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

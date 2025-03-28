@@ -16,7 +16,9 @@ class _PmsScreenState extends State<PmsScreen> {
   double pm10Value = 0;
   double pm25Value = 0;
   double pm01Value = 0;
-
+  double tempValue = 0;
+  double humiValue = 0;
+  double coValue = 0;
   String pm10Quality = 'Loading...';
   String pm25Quality = 'Loading...';
   String pm01Quality = 'Loading...';
@@ -45,17 +47,20 @@ class _PmsScreenState extends State<PmsScreen> {
           await _databaseReference.child('monitor/moniPM25').get();
       DataSnapshot pm01Snapshot =
           await _databaseReference.child('monitor/moniPM01').get();
+      DataSnapshot tempSnapshot =
+          await _databaseReference.child('monitor/moniTemp').get();
+      DataSnapshot humiSnapshot =
+          await _databaseReference.child('monitor/moniHumi').get();
+      DataSnapshot coSnapshot =
+          await _databaseReference.child('monitor/moniCo').get();
 
       setState(() {
-        pm10Value = (pm10Snapshot.value != null)
-            ? double.tryParse(pm10Snapshot.value.toString()) ?? 0
-            : 0;
-        pm25Value = (pm25Snapshot.value != null)
-            ? double.tryParse(pm25Snapshot.value.toString()) ?? 0
-            : 0;
-        pm01Value = (pm01Snapshot.value != null)
-            ? double.tryParse(pm01Snapshot.value.toString()) ?? 0
-            : 0;
+        pm10Value = double.tryParse(pm10Snapshot.value.toString()) ?? 0;
+        pm25Value = double.tryParse(pm25Snapshot.value.toString()) ?? 0;
+        pm01Value = double.tryParse(pm01Snapshot.value.toString()) ?? 0;
+        tempValue = double.tryParse(tempSnapshot.value.toString()) ?? 0;
+        humiValue = double.tryParse(humiSnapshot.value.toString()) ?? 0;
+        coValue = double.tryParse(coSnapshot.value.toString()) ?? 0;
 
         _updateQuality(pm10Value.toInt(), 'PM10');
         _updateQuality(pm25Value.toInt(), 'PM25');
@@ -63,7 +68,6 @@ class _PmsScreenState extends State<PmsScreen> {
       });
     } catch (error) {
       print("Error fetching data: $error");
-      // Consider showing an error message to the user
     }
   }
 
@@ -71,24 +75,59 @@ class _PmsScreenState extends State<PmsScreen> {
     String quality;
     Color color;
 
-    if (value >= 0 && value <= 50) {
-      quality = 'Good';
-      color = Colors.green;
-    } else if (value >= 51 && value <= 100) {
-      quality = 'Satisfactory';
-      color = Colors.yellow;
-    } else if (value >= 101 && value <= 250) {
-      quality = 'Moderate';
-      color = Colors.orange;
-    } else if (value >= 251 && value <= 350) {
-      quality = 'Poor';
-      color = Colors.red;
-    } else if (value >= 351 && value <= 430) {
-      quality = 'Very Poor';
-      color = Colors.redAccent;
+    if (particleType == 'PM10') {
+      if (value >= 0 && value <= 54) {
+        quality = 'Good';
+        color = Colors.green;
+      } else if (value <= 154) {
+        quality = 'Satisfactory';
+        color = Colors.yellow;
+      } else if (value <= 254) {
+        quality = 'Moderate';
+        color = Colors.orange;
+      } else if (value <= 354) {
+        quality = 'Very Poor';
+        color = Colors.purple;
+      } else {
+        quality = 'Severe';
+        color = Colors.brown;
+      }
+    } else if (particleType == 'PM25') {
+      if (value >= 0 && value <= 12) {
+        quality = 'Good';
+        color = Colors.green;
+      } else if (value <= 35) {
+        quality = 'Satisfactory';
+        color = Colors.yellow;
+      } else if (value <= 55) {
+        quality = 'Moderate';
+        color = Colors.orange;
+      } else if (value <= 150) {
+        quality = 'Very Poor';
+        color = Colors.purple;
+      } else {
+        quality = 'Severe';
+        color = Colors.brown;
+      }
+    } else if (particleType == 'PM01') {
+      if (value >= 0 && value <= 6) {
+        quality = 'Good';
+        color = Colors.green;
+      } else if (value <= 10) {
+        quality = 'Satisfactory';
+        color = Colors.yellow;
+      } else if (value <= 15) {
+        quality = 'Moderate';
+        color = Colors.orange;
+      } else if (value <= 35) {
+        quality = 'Very Poor';
+        color = Colors.purple;
+      } else {
+        quality = 'Severe';
+        color = Colors.brown;
+      }
     } else {
-      quality = 'Severe';
-      color = Colors.brown;
+      return; // Không xử lý loại hạt khác
     }
 
     setState(() {
@@ -118,83 +157,123 @@ class _PmsScreenState extends State<PmsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.1,
-                      child: IconButton(
-                        icon: Image.asset(
-                          AppImages.home,
-                          fit: BoxFit.contain,
-                        ),
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const HomeScreen()),
-                          );
-                        },
-                      ),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.1,
+                  child: IconButton(
+                    icon: Image.asset(
+                      AppImages.home,
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(width: 10),
-                    StreamBuilder(
-                      stream:
-                          Stream.periodic(const Duration(seconds: 1), (count) {
-                        return DateTime.now();
-                      }),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final now = snapshot.data as DateTime;
-                          final formattedDate =
-                              "${now.day} ${_getMonthName(now.month)} ${now.year}";
-                          final formattedTime =
-                              "${now.hour}:${now.minute}:${now.second}";
-                          return Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Text(
-                              '$formattedDate\n$formattedTime',
-                              style: const TextStyle(
-                                  color: Colors.white, fontSize: 14),
-                              textAlign: TextAlign.center,
-                            ),
-                          );
-                        } else {
-                          return const CircularProgressIndicator();
-                        }
-                      },
-                    ),
-                  ],
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()),
+                      );
+                    },
+                  ),
                 ),
-                const Text(
-                  "PMS",
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                Text(
+                  "Thông số theo dõi môi trường",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5, // Giãn chữ giúp dễ đọc hơn
+                    shadows: [
+                      Shadow(
+                        blurRadius: 4.0,
+                        color: Colors.black.withOpacity(0.4),
+                        offset: const Offset(2, 2),
+                      ),
+                    ],
+                    foreground: Paint()
+                      ..shader = const LinearGradient(
+                        colors: [
+                          Color(0xFF00FFCC), // Xanh ngọc
+                          Color(0xFF0099FF), // Xanh biển
+                        ],
+                      ).createShader(
+                          const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                StreamBuilder(
+                  stream: Stream.periodic(const Duration(seconds: 1), (count) {
+                    return DateTime.now();
+                  }),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      final now = snapshot.data as DateTime;
+                      final formattedDate =
+                          " ${now.day} ${_getMonthName(now.month)} ${now.year}";
+                      final formattedTime =
+                          "${now.hour.toString().padLeft(2, '0')}:"
+                          "${now.minute.toString().padLeft(2, '0')}:"
+                          "${now.second.toString().padLeft(2, '0')}";
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black
+                              .withOpacity(0.5), // Màu nền nhẹ nhàng
+                          borderRadius:
+                              BorderRadius.circular(12.0), // Bo góc đẹp hơn
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 3,
+                              offset: const Offset(2, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Text(
+                              formattedTime,
+                              style: TextStyle(
+                                color:
+                                    Colors.orangeAccent.shade200, // Màu cam nhẹ
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2, // Khoảng cách giữa các chữ
+                                shadows: [
+                                  Shadow(
+                                    blurRadius: 5.0,
+                                    color: Colors.black.withOpacity(0.6),
+                                    offset: const Offset(2, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return const CircularProgressIndicator();
+                    }
+                  },
                 ),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.12,
                   child: Image.asset(
-                    AppImages.fab,
+                    AppImages.logo2,
                     fit: BoxFit.contain,
                   ),
                 ),
               ],
             ),
-
-            // PM Data Row
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            //   children: [
-            //     _buildPmCard("PM 10 (µg/m³)", pm10Value.toStringAsFixed(0),
-            //         pm10Quality, pm10Color, AppImages.pm10),
-            //     _buildPmCard("PM 2.5 (µg/m³)", pm25Value.toStringAsFixed(0),
-            //         pm25Quality, pm25Color, AppImages.pm25),
-            //     _buildPmCard("PM 1.0 (µg/m³)", pm01Value.toStringAsFixed(0),
-            //         pm01Quality, pm01Color, AppImages.pm01),
-            //   ],
-            // ),
             Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,308 +281,341 @@ class _PmsScreenState extends State<PmsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: SfRadialGauge(
-                        axes: <RadialAxis>[
-                          RadialAxis(
-                            minimum: 0,
-                            maximum: 500,
-                            showLabels: false,
-                            showTicks: false,
-                            axisLineStyle: const AxisLineStyle(
-                              thickness: 10,
-                              cornerStyle: CornerStyle.bothCurve,
-                              color: Colors.white,
-                            ),
-                            ranges: <GaugeRange>[
-                              GaugeRange(
-                                  startValue: 0,
-                                  endValue: 54,
-                                  color: Colors.green,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 54,
-                                  endValue: 154,
-                                  color: Colors.yellow,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 154,
-                                  endValue: 254,
-                                  color: Colors.orange,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 254,
-                                  endValue: 354,
-                                  color: Colors.purple,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 354,
-                                  endValue: 500,
-                                  color: Colors.brown,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                            ],
-                            pointers: <GaugePointer>[
-                              NeedlePointer(
-                                value: 100, // Giá trị hiển thị
-                                enableAnimation: true, // Hiệu ứng chuyển động
-                                needleLength:
-                                    0.6, // Độ dài kim (từ 0.0 đến 1.0)
-                                needleStartWidth: 0.5, // Đầu kim rất mỏng
-                                needleEndWidth:
-                                    12, // Đuôi kim rộng hơn để tạo hình mũi tên
-                                needleColor: Colors.red, // Màu kim
-                                knobStyle: const KnobStyle(
-                                  color: Colors.red, // Màu trung tâm kim
-                                  borderColor:
-                                      Colors.white, // Viền ngoài của tâm kim
-                                  borderWidth: 2, // Độ dày viền tâm kim
-                                  sizeUnit: GaugeSizeUnit.factor,
-                                  knobRadius:
-                                      0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: 300,
+                          height: 300,
+                          child: SfRadialGauge(
+                            axes: <RadialAxis>[
+                              RadialAxis(
+                                minimum: 0,
+                                maximum: 500,
+                                showLabels: false,
+                                showTicks: false,
+                                axisLineStyle: const AxisLineStyle(
+                                  thickness: 10,
+                                  cornerStyle: CornerStyle.bothCurve,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
-                            annotations: <GaugeAnnotation>[
-                              GaugeAnnotation(
-                                widget: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '100', // Giá trị đo AQI
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                ranges: <GaugeRange>[
+                                  GaugeRange(
+                                      startValue: 0,
+                                      endValue: 54,
+                                      color: Colors.green,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 54,
+                                      endValue: 154,
+                                      color: Colors.yellow,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 154,
+                                      endValue: 254,
+                                      color: Colors.orange,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 254,
+                                      endValue: 354,
+                                      color: Colors.purple,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 354,
+                                      endValue: 500,
+                                      color: Colors.brown,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                ],
+                                pointers: <GaugePointer>[
+                                  NeedlePointer(
+                                    value: pm10Value, // Giá trị hiển thị
+                                    enableAnimation:
+                                        true, // Hiệu ứng chuyển động
+                                    needleLength:
+                                        0.6, // Độ dài kim (từ 0.0 đến 1.0)
+                                    needleStartWidth: 0.5, // Đầu kim rất mỏng
+                                    needleEndWidth:
+                                        12, // Đuôi kim rộng hơn để tạo hình mũi tên
+                                    needleColor: Colors.red, // Màu kim
+                                    knobStyle: const KnobStyle(
+                                      color: Colors.red, // Màu trung tâm kim
+                                      borderColor: Colors
+                                          .white, // Viền ngoài của tâm kim
+                                      borderWidth: 2, // Độ dày viền tâm kim
+                                      sizeUnit: GaugeSizeUnit.factor,
+                                      knobRadius:
+                                          0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
                                     ),
-                                    const Text(
-                                      'AQI', // Thêm chữ AQI bên dưới
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                  ),
+                                ],
+                                annotations: <GaugeAnnotation>[
+                                  GaugeAnnotation(
+                                    widget: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '$pm10Value(um/m3)', // Giá trị đo AQI
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'PM10', // Thêm chữ AQI bên dưới
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                angle: 90,
-                                positionFactor: 0.5,
-                              ),
+                                    angle: 90,
+                                    positionFactor: 0.5,
+                                  ),
+                                ],
+                              )
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        Text(
+                          pm10Quality,
+                          style: TextStyle(
+                            color: pm10Color,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: SfRadialGauge(
-                        axes: <RadialAxis>[
-                          RadialAxis(
-                            minimum: 0,
-                            maximum: 200,
-                            showLabels: false,
-                            showTicks: false,
-                            axisLineStyle: const AxisLineStyle(
-                              thickness: 10,
-                              cornerStyle: CornerStyle.bothCurve,
-                              color: Colors.white,
-                            ),
-                            ranges: <GaugeRange>[
-                              GaugeRange(
-                                  startValue: 0,
-                                  endValue: 12,
-                                  color: Colors.green,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 12,
-                                  endValue: 35,
-                                  color: Colors.yellow,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 35,
-                                  endValue: 55,
-                                  color: Colors.orange,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 55,
-                                  endValue: 150,
-                                  color: Colors.purple,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 150,
-                                  endValue: 300,
-                                  color: Colors.brown,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                            ],
-                            pointers: <GaugePointer>[
-                              NeedlePointer(
-                                value: 100, // Giá trị hiển thị
-                                enableAnimation: true, // Hiệu ứng chuyển động
-                                needleLength:
-                                    0.6, // Độ dài kim (từ 0.0 đến 1.0)
-                                needleStartWidth: 0.5, // Đầu kim rất mỏng
-                                needleEndWidth:
-                                    12, // Đuôi kim rộng hơn để tạo hình mũi tên
-                                needleColor: Colors.red, // Màu kim
-                                knobStyle: const KnobStyle(
-                                  color: Colors.red, // Màu trung tâm kim
-                                  borderColor:
-                                      Colors.white, // Viền ngoài của tâm kim
-                                  borderWidth: 2, // Độ dày viền tâm kim
-                                  sizeUnit: GaugeSizeUnit.factor,
-                                  knobRadius:
-                                      0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: 300,
+                          height: 300,
+                          child: SfRadialGauge(
+                            axes: <RadialAxis>[
+                              RadialAxis(
+                                minimum: 0,
+                                maximum: 200,
+                                showLabels: false,
+                                showTicks: false,
+                                axisLineStyle: const AxisLineStyle(
+                                  thickness: 10,
+                                  cornerStyle: CornerStyle.bothCurve,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
-                            annotations: <GaugeAnnotation>[
-                              GaugeAnnotation(
-                                widget: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '100', // Giá trị đo AQI
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                ranges: <GaugeRange>[
+                                  GaugeRange(
+                                      startValue: 0,
+                                      endValue: 12,
+                                      color: Colors.green,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 12,
+                                      endValue: 35,
+                                      color: Colors.yellow,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 35,
+                                      endValue: 55,
+                                      color: Colors.orange,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 55,
+                                      endValue: 150,
+                                      color: Colors.purple,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 150,
+                                      endValue: 300,
+                                      color: Colors.brown,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                ],
+                                pointers: <GaugePointer>[
+                                  NeedlePointer(
+                                    value: pm25Value, // Giá trị hiển thị
+                                    enableAnimation:
+                                        true, // Hiệu ứng chuyển động
+                                    needleLength:
+                                        0.6, // Độ dài kim (từ 0.0 đến 1.0)
+                                    needleStartWidth: 0.5, // Đầu kim rất mỏng
+                                    needleEndWidth:
+                                        12, // Đuôi kim rộng hơn để tạo hình mũi tên
+                                    needleColor: Colors.red, // Màu kim
+                                    knobStyle: const KnobStyle(
+                                      color: Colors.red, // Màu trung tâm kim
+                                      borderColor: Colors
+                                          .white, // Viền ngoài của tâm kim
+                                      borderWidth: 2, // Độ dày viền tâm kim
+                                      sizeUnit: GaugeSizeUnit.factor,
+                                      knobRadius:
+                                          0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
                                     ),
-                                    const Text(
-                                      'AQI', // Thêm chữ AQI bên dưới
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                  ),
+                                ],
+                                annotations: <GaugeAnnotation>[
+                                  GaugeAnnotation(
+                                    widget: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '$pm25Value(um/m3)', // Giá trị đo AQI
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'PM2.5', // Thêm chữ AQI bên dưới
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                angle: 90,
-                                positionFactor: 0.5,
-                              ),
+                                    angle: 90,
+                                    positionFactor: 0.5,
+                                  ),
+                                ],
+                              )
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        Text(
+                          pm25Quality,
+                          style: TextStyle(
+                            color: pm25Color,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: SfRadialGauge(
-                        axes: <RadialAxis>[
-                          RadialAxis(
-                            minimum: 0,
-                            maximum: 50,
-                            showLabels: false,
-                            showTicks: false,
-                            axisLineStyle: const AxisLineStyle(
-                              thickness: 10,
-                              cornerStyle: CornerStyle.bothCurve,
-                              color: Colors.white,
-                            ),
-                            ranges: <GaugeRange>[
-                              GaugeRange(
-                                  startValue: 0,
-                                  endValue: 6,
-                                  color: Colors.green,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 6,
-                                  endValue: 10,
-                                  color: Colors.yellow,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 10,
-                                  endValue: 15,
-                                  color: Colors.orange,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              // GaugeRange(
-                              //     startValue: 150,
-                              //     endValue: 200,
-                              //     color: Colors.red,
-                              //     startWidth: 50,
-                              //     endWidth: 50),
-                              GaugeRange(
-                                  startValue: 15,
-                                  endValue: 35,
-                                  color: Colors.purple,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                              GaugeRange(
-                                  startValue: 35,
-                                  endValue: 50,
-                                  color: Colors.brown,
-                                  startWidth: 50,
-                                  endWidth: 50),
-                            ],
-                            pointers: <GaugePointer>[
-                              NeedlePointer(
-                                value: 100, // Giá trị hiển thị
-                                enableAnimation: true, // Hiệu ứng chuyển động
-                                needleLength:
-                                    0.6, // Độ dài kim (từ 0.0 đến 1.0)
-                                needleStartWidth: 0.5, // Đầu kim rất mỏng
-                                needleEndWidth:
-                                    12, // Đuôi kim rộng hơn để tạo hình mũi tên
-                                needleColor: Colors.red, // Màu kim
-                                knobStyle: const KnobStyle(
-                                  color: Colors.red, // Màu trung tâm kim
-                                  borderColor:
-                                      Colors.white, // Viền ngoài của tâm kim
-                                  borderWidth: 2, // Độ dày viền tâm kim
-                                  sizeUnit: GaugeSizeUnit.factor,
-                                  knobRadius:
-                                      0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: 300,
+                          height: 300,
+                          child: SfRadialGauge(
+                            axes: <RadialAxis>[
+                              RadialAxis(
+                                minimum: 0,
+                                maximum: 50,
+                                showLabels: false,
+                                showTicks: false,
+                                axisLineStyle: const AxisLineStyle(
+                                  thickness: 10,
+                                  cornerStyle: CornerStyle.bothCurve,
+                                  color: Colors.white,
                                 ),
-                              ),
-                            ],
-                            annotations: <GaugeAnnotation>[
-                              GaugeAnnotation(
-                                widget: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '100', // Giá trị đo AQI
-                                      style: const TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                ranges: <GaugeRange>[
+                                  GaugeRange(
+                                      startValue: 0,
+                                      endValue: 6,
+                                      color: Colors.green,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 6,
+                                      endValue: 10,
+                                      color: Colors.yellow,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 10,
+                                      endValue: 15,
+                                      color: Colors.orange,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 15,
+                                      endValue: 35,
+                                      color: Colors.purple,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                  GaugeRange(
+                                      startValue: 35,
+                                      endValue: 50,
+                                      color: Colors.brown,
+                                      startWidth: 50,
+                                      endWidth: 50),
+                                ],
+                                pointers: <GaugePointer>[
+                                  NeedlePointer(
+                                    value: pm01Value, // Giá trị hiển thị
+                                    enableAnimation:
+                                        true, // Hiệu ứng chuyển động
+                                    needleLength:
+                                        0.6, // Độ dài kim (từ 0.0 đến 1.0)
+                                    needleStartWidth: 0.5, // Đầu kim rất mỏng
+                                    needleEndWidth:
+                                        12, // Đuôi kim rộng hơn để tạo hình mũi tên
+                                    needleColor: Colors.red, // Màu kim
+                                    knobStyle: const KnobStyle(
+                                      color: Colors.red, // Màu trung tâm kim
+                                      borderColor: Colors
+                                          .white, // Viền ngoài của tâm kim
+                                      borderWidth: 2, // Độ dày viền tâm kim
+                                      sizeUnit: GaugeSizeUnit.factor,
+                                      knobRadius:
+                                          0.0000, // Điều chỉnh tâm kim lớn hơn để cân đối với kim
                                     ),
-                                    const Text(
-                                      'AQI', // Thêm chữ AQI bên dưới
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
+                                  ),
+                                ],
+                                annotations: <GaugeAnnotation>[
+                                  GaugeAnnotation(
+                                    widget: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '$pm01Value(um/m3)', // Giá trị đo AQI
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const Text(
+                                          'PM1.0', // Thêm chữ AQI bên dưới
+                                          style: TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                angle: 90,
-                                positionFactor: 0.5,
-                              ),
+                                    angle: 90,
+                                    positionFactor: 0.5,
+                                  ),
+                                ],
+                              )
                             ],
-                          )
-                        ],
-                      ),
+                          ),
+                        ),
+                        Text(
+                          pm01Quality,
+                          style: TextStyle(
+                            color: pm01Color,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -513,8 +625,8 @@ class _PmsScreenState extends State<PmsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 SizedBox(
-                  width: 300,
-                  height: 300,
+                  width: 270,
+                  height: 270,
                   child: SfRadialGauge(
                     axes: <RadialAxis>[
                       RadialAxis(
@@ -531,7 +643,7 @@ class _PmsScreenState extends State<PmsScreen> {
                         ranges: <GaugeRange>[
                           GaugeRange(
                             startValue: 0,
-                            endValue: 30,
+                            endValue: tempValue,
                             gradient: const SweepGradient(
                               colors: [
                                 Colors.yellow,
@@ -549,9 +661,15 @@ class _PmsScreenState extends State<PmsScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                const Text("Nhiệt độ",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 24)),
                                 const Icon(Icons.wb_sunny,
-                                    size: 120,
-                                    color: Colors.orange), // Icon mặt trời
+                                    size: 90, color: Colors.orange),
+                                Text("$tempValue°C",
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 24)),
+                                // Icon mặt trời
                               ],
                             ),
                             angle: 90,
@@ -563,8 +681,8 @@ class _PmsScreenState extends State<PmsScreen> {
                   ),
                 ),
                 SizedBox(
-                  width: 300,
-                  height: 300,
+                  width: 270,
+                  height: 270,
                   child: SfRadialGauge(
                     axes: <RadialAxis>[
                       RadialAxis(
@@ -581,7 +699,7 @@ class _PmsScreenState extends State<PmsScreen> {
                         ranges: <GaugeRange>[
                           GaugeRange(
                             startValue: 0,
-                            endValue: 30,
+                            endValue: humiValue,
                             gradient: const SweepGradient(
                               colors: [
                                 Colors.yellow,
@@ -599,9 +717,15 @@ class _PmsScreenState extends State<PmsScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
+                                const Text("Độ ẩm",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 24)),
                                 const Icon(Icons.water_drop,
-                                    size: 120,
-                                    color: Colors.blue), // Icon mặt trời
+                                    size: 90, color: Colors.blue),
+                                Text("$humiValue%",
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24)), // Icon mặt trời
                               ],
                             ),
                             angle: 90,
@@ -613,8 +737,8 @@ class _PmsScreenState extends State<PmsScreen> {
                   ),
                 ),
                 SizedBox(
-                  width: 300,
-                  height: 300,
+                  width: 270,
+                  height: 270,
                   child: SfRadialGauge(
                     axes: <RadialAxis>[
                       RadialAxis(
@@ -631,7 +755,7 @@ class _PmsScreenState extends State<PmsScreen> {
                         ranges: <GaugeRange>[
                           GaugeRange(
                             startValue: 0,
-                            endValue: 30,
+                            endValue: coValue,
                             gradient: const SweepGradient(
                               colors: [
                                 Colors.yellow,
@@ -649,9 +773,16 @@ class _PmsScreenState extends State<PmsScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Icon(Icons.wb_sunny,
-                                    size: 120,
-                                    color: Colors.orange), // Icon mặt trời
+                                const Text("CO",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 24)),
+                                const Icon(Icons.air,
+                                    size: 90, color: Colors.orange),
+                                Text(
+                                  "$coValue ppm",
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 24),
+                                ) // Icon mặt trời
                               ],
                             ),
                             angle: 90,
@@ -664,148 +795,8 @@ class _PmsScreenState extends State<PmsScreen> {
                 ),
               ],
             )
-            // Footer Row
-            // Row(
-            //   crossAxisAlignment: CrossAxisAlignment.center,
-            //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //   children: [
-            //     Container(
-            //       width: 324,
-            //       height: 172,
-            //       child: Text(
-            //         "PM10 particles are coarse particles that can include dust, pollen, mold spores, and larger airborne particles. ",
-            //         style: const TextStyle(
-            //           fontSize: 22,
-            //           color: Colors.white,
-            //         ),
-            //         textAlign: TextAlign.center,
-            //       ),
-            //     ),
-            //     SizedBox(
-            //       child: Image.asset(
-            //         AppImages.level01,
-            //         fit: BoxFit.contain,
-            //         height: 146,
-            //         width: 309,
-            //       ),
-            //     ),
-            //     Container(
-            //       height: 190,
-            //       width: 328,
-            //       child: Column(
-            //         crossAxisAlignment: CrossAxisAlignment.center,
-            //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //         children: [
-            //           _buildWarningRow(AppImages.level02,
-            //               "VERY POOR can aggravate existing respiratory conditions such as asthma or bronchitis."),
-            //           _buildWarningRow(AppImages.level03,
-            //               "SEVERE may contribute to chronic respiratory diseases and cardiovascular problems."),
-            //         ],
-            //       ),
-            //     ),
-            //   ],
-            // ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Hàm hỗ trợ tạo card thông tin PM
-  Widget _buildPmCard(String title, String value, String quality,
-      Color qualityColor, String imag) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              SizedBox(
-                child: Image.asset(
-                  imag,
-                  fit: BoxFit.contain,
-                  width: 50,
-                  height: 81,
-                ),
-              ),
-              const SizedBox(
-                width: 20,
-              ),
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            quality,
-            style: TextStyle(
-              color: qualityColor,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Hàm hỗ trợ tạo hàng cảnh báo
-  Widget _buildWarningRow(String imagePath, String text) {
-    return Container(
-      width: 327,
-      height: 90,
-      child: Row(
-        children: [
-          SizedBox(
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
-              width: 50,
-              height: 81,
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: text.split(" ")[0],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text: " " + text.substring(text.indexOf(" ") + 1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
